@@ -23,6 +23,14 @@ class DB {
     })
   }
 
+  async disconnect() {
+    return new Promise((resolve) => {
+      this.db.end(() => {
+        resolve(true)
+      })
+    })
+  }
+
   async create({
     username,
     email,
@@ -32,23 +40,29 @@ class DB {
     email: string
     description: string
   }) {
-    /* 
-    if the client exist
-      take client_id and set a new task for him
-    else
-      create a new client
-      take client_id and set a new task for him
-    */
     return new Promise(async (resolve, reject) => {
-      this.db.query(
-        'INSERT INTO task(description) VALUES($1) RETURNING *',
-        [description],
-        (err: PostgresqlError, res: PostgresqlResponse<any>) => {
-          if (err) return reject(err)
-
-          resolve(res.rows[0])
-        }
+      let response = await this.db.query(
+        'SELECT id, name FROM client WHERE name = $1;',
+        [username]
       )
+
+      if (!response.rowCount) {
+        response = await this.db.query(
+          'INSERT INTO client(name, email) VALUES($1, $2) RETURNING *;',
+          [username, email]
+        )
+      } else {
+        const { email: savedEmail } = response.rows[0]
+
+        if (savedEmail !== email) return reject(new Error('Wrong email'))
+      }
+
+      const result = await this.db.query(
+        'INSERT INTO task(client_id, description) VALUES($1, $2) RETURNING *;',
+        [response.rows[0].id, description]
+      )
+
+      resolve(result.rows[0])
     })
   }
 
@@ -61,25 +75,23 @@ class DB {
 
       switch (target) {
         case Read.tasks:
-          this.db.query(
-            'SELECT * FROM task',
-            (err: PostgresqlError, res: PostgresqlResponse<TodoRow>) => {
-              if (err) return reject(err)
-
-              resolve(res.rows)
-            }
+          response = await this.db.query(
+            'SELECT task.*, client.name, client.email FROM client INNER JOIN task ON client.id = task.client_id;'
           )
+          resolve(response.rows)
           break
+
         case Read.task:
           response = await this.db.query(
-            'SELECT * FROM task WHERE todo_id = $1',
+            'SELECT * FROM task WHERE todo_id = $1;',
             [id]
           )
           resolve(response.rows[0])
           break
+
         case Read.admin:
           response = await this.db.query(
-            'SELECT id, name FROM client WHERE name = $1',
+            'SELECT id, name FROM client WHERE name = $1;',
             [username]
           )
 
@@ -88,7 +100,7 @@ class DB {
           const admin = response.rows[0]
 
           response = await this.db.query(
-            'SELECT pass FROM administrator WHERE client_id = $1',
+            'SELECT pass FROM administrator WHERE client_id = $1;',
             [admin.id]
           )
 
@@ -99,25 +111,33 @@ class DB {
     })
   }
 
-  async update() {
-    return new Promise((resolve, reject) => {
-      this.db.query(
-        '',
-        (err: PostgresqlError, res: PostgresqlResponse<any>) => {
-          if (err) return reject(err)
-        }
+  async update({
+    taskId,
+    description,
+    done,
+  }: {
+    taskId: number
+    description: string
+    done: boolean
+  }) {
+    return new Promise(async (resolve) => {
+      const response = await this.db.query(
+        'UPDATE task SET description = $1, done = $2 WHERE id = $3 RETURNING *;',
+        [description, done, taskId]
       )
+
+      resolve(response.rows[0])
     })
   }
 
-  async delete() {
-    return new Promise((resolve, reject) => {
-      this.db.query(
-        '',
-        (err: PostgresqlError, res: PostgresqlResponse<any>) => {
-          if (err) return reject(err)
-        }
+  async delete({ taskId }: { taskId: number }) {
+    return new Promise(async (resolve, reject) => {
+      const response = await this.db.query(
+        'DELETE FROM task WHERE id = $1 RETURNING *;',
+        [taskId]
       )
+
+      resolve(response.rows[0])
     })
   }
 }

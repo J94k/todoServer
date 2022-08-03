@@ -1,5 +1,5 @@
 import express from 'express'
-import { STATUS } from '../constants'
+import { STATUS, REGEXP } from '../constants'
 import db from '../db'
 import { Read } from '../db/types'
 import { resolveResult } from './common'
@@ -49,21 +49,34 @@ router.post('/new', async (req, res) => {
   }
 })
 
-router.put('/', async (req, res) => {
+// @audit-issue allow only for admin
+router.patch('/:id', async (req, res) => {
   try {
-    res.status(STATUS.serverError).send({
-      msg: 'Unavailable',
-    })
+    const { id } = req.params
+    const { description, done } = req.body
+
+    if (!description.match(REGEXP) || typeof done !== 'boolean') {
+      res.status(STATUS.clientError).json({
+        msg: 'Invalid data',
+      })
+      return
+    }
+
+    const result = await db.update({ taskId: Number(id), description, done })
+
+    resolveResult(res, result)
   } catch (error) {
     res.status(STATUS.serverError).send({ error })
   }
 })
 
+// @audit-issue allow only for admin
 router.delete('/:id', async (req, res) => {
   try {
-    res.status(STATUS.serverError).send({
-      msg: 'Unavailable',
-    })
+    const { id } = req.params
+    const result = await db.delete({ taskId: Number(id) })
+
+    resolveResult(res, result)
   } catch (error) {
     res.status(STATUS.serverError).send({ error })
   }

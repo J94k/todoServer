@@ -8,9 +8,10 @@ CREATE TABLE
 CREATE TABLE
   task(
     id SERIAL PRIMARY KEY,
-    client_id INT,
+    client_id INT NOT NULL,
     CONSTRAINT fk_client FOREIGN KEY(client_id) REFERENCES client(id),
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    done BOOL NOT NULL DEFAULT FALSE
   );
 
 CREATE TABLE

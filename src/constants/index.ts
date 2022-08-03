@@ -29,3 +29,9 @@ export const STATUS = {
   serverError: 500,
   notFound: 404,
 }
+
+export const REGEXP = {
+  email: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/,
+  username: /^[\w\d]{2,100}$/gi,
+  taskDescription: /^[\w\d ]+$/gi,
+}

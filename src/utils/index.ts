@@ -1,5 +1,6 @@
 import db from '../db'
 import { Read } from '../db/types'
+import { REGEXP } from '../constants'
 
 export function isTaskDataValid({
   username,
@@ -10,7 +11,11 @@ export function isTaskDataValid({
   email: string
   description: string
 }) {
-  return Boolean(username && email && description)
+  return Boolean(
+    username.match(REGEXP.username) &&
+      email.match(REGEXP.email) &&
+      description.match(REGEXP.taskDescription)
+  )
 }
 
 export async function isValidAdminData({
