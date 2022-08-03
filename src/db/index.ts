@@ -35,14 +35,16 @@ class DB {
     username,
     email,
     description,
+    done,
   }: {
     username: string
     email: string
     description: string
+    done: boolean
   }) {
     return new Promise(async (resolve, reject) => {
       let response = await this.db.query(
-        'SELECT id, name FROM client WHERE name = $1;',
+        'SELECT id, name, email FROM client WHERE name = $1;',
         [username]
       )
 
@@ -58,8 +60,8 @@ class DB {
       }
 
       const result = await this.db.query(
-        'INSERT INTO task(client_id, description) VALUES($1, $2) RETURNING *;',
-        [response.rows[0].id, description]
+        'INSERT INTO task(client_id, description, done) VALUES($1, $2, $3) RETURNING *;',
+        [response.rows[0].id, description, done]
       )
 
       resolve(result.rows[0])
@@ -82,10 +84,9 @@ class DB {
           break
 
         case Read.task:
-          response = await this.db.query(
-            'SELECT * FROM task WHERE todo_id = $1;',
-            [id]
-          )
+          response = await this.db.query('SELECT * FROM task WHERE id = $1;', [
+            id,
+          ])
           resolve(response.rows[0])
           break
 

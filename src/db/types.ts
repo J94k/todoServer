@@ -13,8 +13,10 @@ export interface PostgresqlResponse<T> {
 }
 
 export interface TodoRow {
-  todo_id: number
+  id: number
+  client_id: number
   description: string
+  done: boolean
 }
 
 export enum Read {

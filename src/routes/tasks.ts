@@ -32,16 +32,16 @@ router
 
 router.post('/new', async (req, res) => {
   try {
-    const { username, email, description } = req.body
+    const { name, email, description, done } = req.body
 
-    if (!isTaskDataValid({ username, email, description })) {
+    if (!isTaskDataValid({ username: name, email, description })) {
       res.status(STATUS.clientError).send({
         msg: 'Invalid data',
       })
       return
     }
 
-    const result = await db.create({ username, email, description })
+    const result = await db.create({ username: name, email, description, done })
 
     resolveResult(res, result)
   } catch (error) {
