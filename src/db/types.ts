@@ -18,6 +18,10 @@ export interface TodoRow {
 }
 
 export enum Read {
-  all,
-  one,
+  tasks,
+  task,
+  users,
+  user,
+  admins,
+  admin,
 }

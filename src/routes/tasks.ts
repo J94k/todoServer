@@ -10,7 +10,7 @@ const router = express.Router()
 router
   .get('/all', async (req, res) => {
     try {
-      const result = await db.read(Read.all)
+      const result = await db.read(Read.tasks)
 
       resolveResult(res, result)
     } catch (error) {
@@ -20,7 +20,9 @@ router
   .get('/:id', async (req, res) => {
     try {
       const { id } = req.params
-      const result = await db.read(Read.one, id)
+      const result = await db.read(Read.task, {
+        id,
+      })
 
       resolveResult(res, result)
     } catch (error) {

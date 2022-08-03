@@ -2,7 +2,8 @@ import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import { ORIGIN, STATUS, PORT } from './constants'
-import todos from './routes/todos'
+import tasks from './routes/tasks'
+import users from './routes/users'
 
 const app = express()
 
@@ -20,7 +21,8 @@ app.use(
   })
 )
 app.use(express.urlencoded({ extended: true }))
-app.use('/todos', todos)
+app.use('/tasks', tasks)
+app.use('/users', users)
 
 app.use((req, res) => {
   res.status(STATUS.clientError).send('Unknown problem')

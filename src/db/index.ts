@@ -32,9 +32,16 @@ class DB {
     email: string
     description: string
   }) {
+    /* 
+    if the client exist
+      take client_id and set a new task for him
+    else
+      create a new client
+      take client_id and set a new task for him
+    */
     return new Promise(async (resolve, reject) => {
       this.db.query(
-        'INSERT INTO todo(description) VALUES($1) RETURNING *',
+        'INSERT INTO task(description) VALUES($1) RETURNING *',
         [description],
         (err: PostgresqlError, res: PostgresqlResponse<any>) => {
           if (err) return reject(err)
@@ -45,12 +52,17 @@ class DB {
     })
   }
 
-  async read(target: Read, id?: string) {
-    return new Promise((resolve, reject) => {
+  async read(
+    target: Read,
+    { id, username }: { id?: string; username?: string } = {}
+  ) {
+    return new Promise(async (resolve, reject) => {
+      let response
+
       switch (target) {
-        case Read.all:
+        case Read.tasks:
           this.db.query(
-            'SELECT * FROM todo',
+            'SELECT * FROM task',
             (err: PostgresqlError, res: PostgresqlResponse<TodoRow>) => {
               if (err) return reject(err)
 
@@ -58,17 +70,29 @@ class DB {
             }
           )
           break
-        case Read.one:
-          this.db.query(
-            'SELECT * FROM todo WHERE todo_id = $1',
-            [id],
-            (err: PostgresqlError, res: PostgresqlResponse<TodoRow>) => {
-              if (err) return reject(err)
-
-              resolve(res.rows[0])
-            }
+        case Read.task:
+          response = await this.db.query(
+            'SELECT * FROM task WHERE todo_id = $1',
+            [id]
           )
+          resolve(response.rows[0])
           break
+        case Read.admin:
+          response = await this.db.query(
+            'SELECT id, name FROM client WHERE name = $1',
+            [username]
+          )
+
+          if (!response.rowCount) return resolve(null)
+
+          const admin = response.rows[0]
+
+          response = await this.db.query(
+            'SELECT pass FROM administrator WHERE client_id = $1',
+            [admin.id]
+          )
+
+          resolve({ username: admin.name, hash: response.rows[0].pass })
         default:
           resolve(null)
       }
