@@ -4,6 +4,7 @@ import db from '../db'
 import { Read } from '../db/types'
 import { resolveResult } from './common'
 import { isTaskDataValid } from '../utils'
+import auth from '../middlewares/auth'
 
 const router = express.Router()
 
@@ -32,16 +33,16 @@ router
 
 router.post('/new', async (req, res) => {
   try {
-    const { username, email, description } = req.body
+    const { name, email, description, done } = req.body
 
-    if (!isTaskDataValid({ username, email, description })) {
+    if (!isTaskDataValid({ username: name, email, description })) {
       res.status(STATUS.clientError).send({
         msg: 'Invalid data',
       })
       return
     }
 
-    const result = await db.create({ username, email, description })
+    const result = await db.create({ username: name, email, description, done })
 
     resolveResult(res, result)
   } catch (error) {
@@ -49,8 +50,7 @@ router.post('/new', async (req, res) => {
   }
 })
 
-// @audit-issue allow only for admin
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params
     const { description, done } = req.body
@@ -62,7 +62,16 @@ router.patch('/:id', async (req, res) => {
       return
     }
 
-    const result = await db.update({ taskId: Number(id), description, done })
+    const task: any = await db.read(Read.task, {
+      id,
+    })
+
+    const result = await db.update({
+      taskId: Number(id),
+      description,
+      done,
+      edited: description !== task?.description,
+    })
 
     resolveResult(res, result)
   } catch (error) {
@@ -70,8 +79,7 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
-// @audit-issue allow only for admin
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params
     const result = await db.delete({ taskId: Number(id) })

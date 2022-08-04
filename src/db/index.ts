@@ -35,14 +35,16 @@ class DB {
     username,
     email,
     description,
+    done,
   }: {
     username: string
     email: string
     description: string
+    done: boolean
   }) {
     return new Promise(async (resolve, reject) => {
       let response = await this.db.query(
-        'SELECT id, name FROM client WHERE name = $1;',
+        'SELECT id, name, email FROM client WHERE name = $1;',
         [username]
       )
 
@@ -58,11 +60,12 @@ class DB {
       }
 
       const result = await this.db.query(
-        'INSERT INTO task(client_id, description) VALUES($1, $2) RETURNING *;',
-        [response.rows[0].id, description]
+        'INSERT INTO task(client_id, description, done) VALUES($1, $2, $3) RETURNING *;',
+        [response.rows[0].id, description, done]
       )
+      const client = response.rows[0]
 
-      resolve(result.rows[0])
+      resolve({ ...result.rows[0], name: client.name, email: client.email })
     })
   }
 
@@ -76,16 +79,15 @@ class DB {
       switch (target) {
         case Read.tasks:
           response = await this.db.query(
-            'SELECT task.*, client.name, client.email FROM client INNER JOIN task ON client.id = task.client_id;'
+            'SELECT task.*, client.name, client.email FROM client INNER JOIN task ON client.id = task.client_id ORDER BY task.id;'
           )
           resolve(response.rows)
           break
 
         case Read.task:
-          response = await this.db.query(
-            'SELECT * FROM task WHERE todo_id = $1;',
-            [id]
-          )
+          response = await this.db.query('SELECT * FROM task WHERE id = $1;', [
+            id,
+          ])
           resolve(response.rows[0])
           break
 
@@ -115,15 +117,17 @@ class DB {
     taskId,
     description,
     done,
+    edited,
   }: {
     taskId: number
     description: string
     done: boolean
+    edited: boolean
   }) {
     return new Promise(async (resolve) => {
       const response = await this.db.query(
-        'UPDATE task SET description = $1, done = $2 WHERE id = $3 RETURNING *;',
-        [description, done, taskId]
+        'UPDATE task SET description = $1, done = $2, edited = $3 WHERE id = $4 RETURNING *;',
+        [description, done, edited, taskId]
       )
 
       resolve(response.rows[0])

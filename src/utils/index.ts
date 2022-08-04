@@ -1,6 +1,7 @@
+import jwt from 'jsonwebtoken'
 import db from '../db'
 import { Read } from '../db/types'
-import { REGEXP } from '../constants'
+import { REGEXP, JWT_SECRET } from '../constants'
 
 export function isTaskDataValid({
   username,
@@ -24,7 +25,7 @@ export async function isValidAdminData({
 }: {
   username: string
   passHash: string
-}): Promise<boolean | unknown> {
+}): Promise<{ success: boolean }> {
   try {
     const result = await db.read(Read.admin, {
       username,
@@ -37,4 +38,23 @@ export async function isValidAdminData({
   } catch (error) {
     throw error
   }
+}
+
+export function generateToken({
+  username,
+  passHash,
+}: {
+  username: string
+  passHash: string
+}) {
+  return jwt.sign(
+    {
+      user: {
+        name: username,
+        passHash,
+      },
+    },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  )
 }
