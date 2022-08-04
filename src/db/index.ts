@@ -117,15 +117,17 @@ class DB {
     taskId,
     description,
     done,
+    edited,
   }: {
     taskId: number
     description: string
     done: boolean
+    edited: boolean
   }) {
     return new Promise(async (resolve) => {
       const response = await this.db.query(
-        'UPDATE task SET description = $1, done = $2 WHERE id = $3 RETURNING *;',
-        [description, done, taskId]
+        'UPDATE task SET description = $1, done = $2, edited = $3 WHERE id = $4 RETURNING *;',
+        [description, done, edited, taskId]
       )
 
       resolve(response.rows[0])

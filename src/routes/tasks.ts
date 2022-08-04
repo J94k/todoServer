@@ -62,7 +62,16 @@ router.patch('/:id', auth, async (req, res) => {
       return
     }
 
-    const result = await db.update({ taskId: Number(id), description, done })
+    const task: any = await db.read(Read.task, {
+      id,
+    })
+
+    const result = await db.update({
+      taskId: Number(id),
+      description,
+      done,
+      edited: description !== task?.description,
+    })
 
     resolveResult(res, result)
   } catch (error) {
