@@ -63,8 +63,9 @@ class DB {
         'INSERT INTO task(client_id, description, done) VALUES($1, $2, $3) RETURNING *;',
         [response.rows[0].id, description, done]
       )
+      const client = response.rows[0]
 
-      resolve(result.rows[0])
+      resolve({ ...result.rows[0], name: client.name, email: client.email })
     })
   }
 
@@ -78,7 +79,7 @@ class DB {
       switch (target) {
         case Read.tasks:
           response = await this.db.query(
-            'SELECT task.*, client.name, client.email FROM client INNER JOIN task ON client.id = task.client_id;'
+            'SELECT task.*, client.name, client.email FROM client INNER JOIN task ON client.id = task.client_id ORDER BY task.id;'
           )
           resolve(response.rows)
           break

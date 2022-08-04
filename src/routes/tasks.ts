@@ -4,6 +4,7 @@ import db from '../db'
 import { Read } from '../db/types'
 import { resolveResult } from './common'
 import { isTaskDataValid } from '../utils'
+import auth from '../middlewares/auth'
 
 const router = express.Router()
 
@@ -49,8 +50,7 @@ router.post('/new', async (req, res) => {
   }
 })
 
-// @audit-issue allow only for admin
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params
     const { description, done } = req.body
@@ -70,8 +70,7 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
-// @audit-issue allow only for admin
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params
     const result = await db.delete({ taskId: Number(id) })
