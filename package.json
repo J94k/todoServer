@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon ./src/index.ts",
+    "start": "nodemon ./src/index.ts",
     "prettier": "prettier -w ./src/ ./tests/"
   },
   "license": "ISC",
