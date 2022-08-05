@@ -14,6 +14,16 @@ Linux:
 8. copy `.env.example` content to `.env` and fill missing values (change default values if necessary)
 9. start the server: `npm run start`
 
+### Routes
+
+- POST `users/login`: user login. Only admin available
+- POST `users/auth`: authentitication
+- GET `tasks/all`: return an array of all tasks (sorted by tasks id)
+- GET `tasks/:id`: return a task with `:id`
+- POST `tasks/new`: create a new task
+- PATCH `tasks/:id`: update a task with `:id`
+- DELETE `tasks/:id`: delete a task with `:id`
+
 ### TODO
 
 - [ ] improve response formats
