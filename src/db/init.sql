@@ -1,3 +1,8 @@
+CREATE DATABASE
+  todo_db;
+
+-- connect to todo_db first
+
 CREATE TABLE
   client(
     id SERIAL PRIMARY KEY,
